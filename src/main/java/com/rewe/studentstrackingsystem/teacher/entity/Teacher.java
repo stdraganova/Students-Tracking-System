@@ -23,6 +23,7 @@ public class Teacher{
     @Column(name = "email", nullable = false)
     private String email;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 }
