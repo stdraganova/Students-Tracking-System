@@ -17,9 +17,7 @@ public class TeacherService {
     private final TeacherMapper mapper;
 
     public TeacherResponse save(TeacherRequest teacherRequest) {
-
         var savedTeacher = teacherRepository.save(mapper.toEntity(teacherRequest));
-
         return mapper.toResponse(savedTeacher);
     }
 

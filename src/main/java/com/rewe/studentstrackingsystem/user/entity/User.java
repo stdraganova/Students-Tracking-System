@@ -1,5 +1,7 @@
 package com.rewe.studentstrackingsystem.user.entity;
 
+import com.rewe.studentstrackingsystem.student.entity.Student;
+import com.rewe.studentstrackingsystem.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,7 +26,29 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
+
+    @Column(name = "email", nullable = false)
+    private String email;
+
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role;
+
+    @OneToOne(mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private Student student;
+
+    @OneToOne(mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private Teacher teacher;
 }
