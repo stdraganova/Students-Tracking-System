@@ -2,25 +2,23 @@ package com.rewe.studentstrackingsystem.grade.entity;
 
 import com.rewe.studentstrackingsystem.course.entity.Course;
 import com.rewe.studentstrackingsystem.student.entity.Student;
-import com.rewe.studentstrackingsystem.teacher.entity.Teacher;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
 @Table(name = "grades")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Data
 public class Grade {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "grade", nullable = false)
@@ -30,11 +28,10 @@ public class Grade {
     private LocalDate creationDate;
 
     @ManyToOne
+    @JoinColumn(name = "student_id", referencedColumnName = "id", nullable = false)
     private Student student;
 
     @ManyToOne
-    private Teacher teacher;
-
-    @ManyToOne
+    @JoinColumn(name = "course_id", referencedColumnName = "id", nullable = false)
     private Course course;
 }
