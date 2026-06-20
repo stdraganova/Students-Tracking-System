@@ -4,7 +4,6 @@ import com.rewe.studentstrackingsystem.attendance.dtos.AttendanceRequest;
 import com.rewe.studentstrackingsystem.attendance.services.AttendanceService;
 import com.rewe.studentstrackingsystem.student.dto.StudentRequest;
 import com.rewe.studentstrackingsystem.student.dto.StudentResponse;
-import com.rewe.studentstrackingsystem.student.entity.Student;
 import com.rewe.studentstrackingsystem.student.mapper.StudentMapper;
 import com.rewe.studentstrackingsystem.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,22 +24,20 @@ public class StudentService {
         return mapper.toResponse(savedStudent);
     }
 
-    public Student getById(UUID studentId) {
-        return studentRepository.findById(studentId).orElseThrow(() ->
-                new RuntimeException("Student not found with id: " + studentId)
-        );
-    }
-
     public void addAttendance(AttendanceRequest attendanceRequest) {
         var attendance = attendanceService.create(attendanceRequest);
-        var student = getById(attendanceRequest.studentId());
+        var student = studentRepository.findById(attendanceRequest.studentId()).orElseThrow(() ->
+                new RuntimeException("Student not found with id: " + attendanceRequest.studentId())
+        );
 
         student.getAttendances().add(attendance);
         studentRepository.save(student);
     }
 
     public void removeAttendance(UUID attendanceId, UUID studentId) {
-        var student = getById(studentId);
+        var student = studentRepository.findById(studentId).orElseThrow(() ->
+                new RuntimeException("Student not found with id: " + studentId)
+        );
 
         student.getAttendances()
                 .removeIf(attendance -> attendance.getId().equals(attendanceId));

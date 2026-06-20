@@ -1,9 +1,9 @@
 package com.rewe.studentstrackingsystem.course.dto;
 
-import com.rewe.studentstrackingsystem.teacher.entity.Teacher;
+import java.util.UUID;
 
 public record CourseRequest(
         String name,
-        Teacher teacher
+        UUID teacherId
 ) {
 }

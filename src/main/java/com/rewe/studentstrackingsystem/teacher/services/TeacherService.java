@@ -2,7 +2,6 @@ package com.rewe.studentstrackingsystem.teacher.services;
 
 import com.rewe.studentstrackingsystem.teacher.dtos.TeacherRequest;
 import com.rewe.studentstrackingsystem.teacher.dtos.TeacherResponse;
-import com.rewe.studentstrackingsystem.teacher.entity.Teacher;
 import com.rewe.studentstrackingsystem.teacher.mapper.TeacherMapper;
 import com.rewe.studentstrackingsystem.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +19,6 @@ public class TeacherService {
     public TeacherResponse save(TeacherRequest teacherRequest) {
         var savedTeacher = teacherRepository.save(mapper.toEntity(teacherRequest));
         return mapper.toResponse(savedTeacher);
-    }
-
-    public Teacher getById (UUID teacherId) {
-        return teacherRepository.findById(teacherId)
-                .orElseThrow(() -> new RuntimeException("Teacher not found with id: " + teacherId));
     }
 
     public void delete (UUID teacherId) {
