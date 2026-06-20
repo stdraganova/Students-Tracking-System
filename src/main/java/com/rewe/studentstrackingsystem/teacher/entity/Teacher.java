@@ -1,9 +1,11 @@
 package com.rewe.studentstrackingsystem.teacher.entity;
 
+import com.rewe.studentstrackingsystem.course.entity.Course;
 import com.rewe.studentstrackingsystem.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -29,6 +31,9 @@ public class Teacher{
     private String email;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Course> courses;
 }

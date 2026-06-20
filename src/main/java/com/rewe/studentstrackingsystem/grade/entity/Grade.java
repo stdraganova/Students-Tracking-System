@@ -2,7 +2,6 @@ package com.rewe.studentstrackingsystem.grade.entity;
 
 import com.rewe.studentstrackingsystem.course.entity.Course;
 import com.rewe.studentstrackingsystem.student.entity.Student;
-import com.rewe.studentstrackingsystem.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,11 +28,10 @@ public class Grade {
     private LocalDate creationDate;
 
     @ManyToOne
+    @JoinColumn(name = "student_id", referencedColumnName = "id", nullable = false)
     private Student student;
 
     @ManyToOne
-    private Teacher teacher;
-
-    @ManyToOne
+    @JoinColumn(name = "course_id", referencedColumnName = "id", nullable = false)
     private Course course;
 }

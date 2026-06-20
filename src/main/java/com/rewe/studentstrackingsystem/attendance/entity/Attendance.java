@@ -29,11 +29,14 @@ public class Attendance {
     private boolean isPresent;
 
     @ManyToOne
+    @JoinColumn(name = "student_id", referencedColumnName = "id", nullable = false)
     private Student student;
 
     @ManyToOne
+    @JoinColumn(name = "teacher_id", referencedColumnName = "id", nullable = false)
     private Teacher teacher;
 
     @ManyToOne
+    @JoinColumn(name = "course_id", referencedColumnName = "id", nullable = false)
     private Course course;
 }

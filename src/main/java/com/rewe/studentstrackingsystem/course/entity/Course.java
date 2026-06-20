@@ -1,6 +1,7 @@
 package com.rewe.studentstrackingsystem.course.entity;
 
 import com.rewe.studentstrackingsystem.student.entity.Student;
+import com.rewe.studentstrackingsystem.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +24,10 @@ public class Course {
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "teacher_id", referencedColumnName = "id", nullable = false)
+    private Teacher teacher;
 
     @ManyToMany(mappedBy = "courses")
     private List<Student> students = new ArrayList<>();
