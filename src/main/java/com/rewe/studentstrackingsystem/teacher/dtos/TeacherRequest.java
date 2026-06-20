@@ -1,11 +1,9 @@
 package com.rewe.studentstrackingsystem.teacher.dtos;
 
-import java.util.UUID;
+import com.rewe.studentstrackingsystem.user.entity.User;
+import jakarta.validation.constraints.NotNull;
 
 public record TeacherRequest(
-        String firstName,
-        String lastName,
-        String email,
-        UUID userId
+        @NotNull User user
 ) {
 }

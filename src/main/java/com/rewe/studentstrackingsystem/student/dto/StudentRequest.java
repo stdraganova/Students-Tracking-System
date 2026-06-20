@@ -1,11 +1,9 @@
 package com.rewe.studentstrackingsystem.student.dto;
 
 import com.rewe.studentstrackingsystem.user.entity.User;
+import jakarta.validation.constraints.NotNull;
 
 public record StudentRequest(
-        String firstName,
-        String lastName,
-        String email,
-        User user
+        @NotNull User user
 ) {
 }
