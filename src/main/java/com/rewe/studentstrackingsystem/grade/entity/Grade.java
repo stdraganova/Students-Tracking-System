@@ -21,6 +21,7 @@ import java.util.UUID;
 public class Grade {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "grade", nullable = false)

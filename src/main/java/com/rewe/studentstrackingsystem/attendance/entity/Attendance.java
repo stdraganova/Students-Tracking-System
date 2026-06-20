@@ -21,6 +21,7 @@ import java.util.UUID;
 public class Attendance {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "attendance_date", nullable = false)
