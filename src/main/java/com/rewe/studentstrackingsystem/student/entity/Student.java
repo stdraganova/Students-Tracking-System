@@ -12,10 +12,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "students")
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-@Data
 public class Student {
 
     @Id

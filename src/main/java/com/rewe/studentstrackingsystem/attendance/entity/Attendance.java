@@ -4,20 +4,18 @@ import com.rewe.studentstrackingsystem.course.entity.Course;
 import com.rewe.studentstrackingsystem.student.entity.Student;
 import com.rewe.studentstrackingsystem.teacher.entity.Teacher;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
 @Table(name = "attendance")
-@Builder
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
-@Data
+@AllArgsConstructor
+@Builder
 public class Attendance {
 
     @Id

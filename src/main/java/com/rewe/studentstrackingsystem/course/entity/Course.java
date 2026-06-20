@@ -2,10 +2,7 @@ package com.rewe.studentstrackingsystem.course.entity;
 
 import com.rewe.studentstrackingsystem.student.entity.Student;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +10,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "courses")
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-@Data
 public class Course {
 
     @Id
