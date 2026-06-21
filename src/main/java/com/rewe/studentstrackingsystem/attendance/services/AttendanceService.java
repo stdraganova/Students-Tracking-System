@@ -5,7 +5,6 @@ import com.rewe.studentstrackingsystem.attendance.entity.Attendance;
 import com.rewe.studentstrackingsystem.attendance.repository.AttendanceRepository;
 import com.rewe.studentstrackingsystem.course.repository.CourseRepository;
 import com.rewe.studentstrackingsystem.exception.ResourceNotFoundException;
-import com.rewe.studentstrackingsystem.exception.ValidationException;
 import com.rewe.studentstrackingsystem.student.entity.Student;
 import com.rewe.studentstrackingsystem.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
