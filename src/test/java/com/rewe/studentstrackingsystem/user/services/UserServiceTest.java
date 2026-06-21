@@ -105,10 +105,9 @@ class UserServiceTest {
     void shouldDeleteUserById() {
         UUID id = UUID.randomUUID();
 
-        doNothing().when(userRepository).deleteById(id);
+        when(userRepository.existsById(id)).thenReturn(true);
 
         userService.delete(id);
 
         verify(userRepository).deleteById(id);
-    }
 }
