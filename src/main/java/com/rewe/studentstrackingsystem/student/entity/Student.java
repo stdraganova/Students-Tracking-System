@@ -7,6 +7,7 @@ import com.rewe.studentstrackingsystem.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,11 +29,11 @@ public class Student {
     private User user;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Grade> grades;
+    private List<Grade> grades = new ArrayList<>();
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Attendance> attendances;
+    private List<Attendance> attendances = new ArrayList<>();
 
     @ManyToMany
-    private List <Course> courses;
+    private List <Course> courses = new ArrayList<>();
 }
