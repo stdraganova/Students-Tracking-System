@@ -20,10 +20,6 @@ public class AttendanceService {
     private final TeacherRepository teacherRepository;
     private final CourseRepository courseRepository;
 
-    public Attendance save (Attendance attendance) {
-        return attendanceRepository.save(attendance);
-    }
-
     public Attendance create (AttendanceRequest attendanceRequest){
         var student = studentRepository.findById(attendanceRequest.studentId()).orElseThrow(() ->
                 new RuntimeException("Student not found with id: " + attendanceRequest.studentId())
@@ -46,7 +42,7 @@ public class AttendanceService {
         attendance.setTeacher(teacher);
         attendance.setPresent(attendanceRequest.isPresent());
 
-        return save(attendance);
+        return attendanceRepository.save(attendance);
     }
 
     public void delete (UUID attendanceId) {
