@@ -93,10 +93,9 @@ class UserServiceTest {
 
         when(mapper.toEntity(request)).thenReturn(user);
 
-        IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class,
+        com.rewe.studentstrackingsystem.exception.InvalidOperationException ex =
+                assertThrows(com.rewe.studentstrackingsystem.exception.InvalidOperationException.class,
                         () -> userService.save(request));
-
         assertEquals("Cannot create ADMIN users via API", ex.getMessage());
 
         verify(userRepository, never()).save(any());
