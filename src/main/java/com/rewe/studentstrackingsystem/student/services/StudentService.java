@@ -2,8 +2,9 @@ package com.rewe.studentstrackingsystem.student.services;
 
 import com.rewe.studentstrackingsystem.attendance.dtos.AttendanceRequest;
 import com.rewe.studentstrackingsystem.attendance.services.AttendanceService;
-import com.rewe.studentstrackingsystem.course.mapper.CourseMapper;
 import com.rewe.studentstrackingsystem.course.services.CourseService;
+import com.rewe.studentstrackingsystem.grade.dto.GradeRequest;
+import com.rewe.studentstrackingsystem.grade.services.GradeService;
 import com.rewe.studentstrackingsystem.student.dto.StudentRequest;
 import com.rewe.studentstrackingsystem.student.dto.StudentResponse;
 import com.rewe.studentstrackingsystem.student.mapper.StudentMapper;
@@ -21,7 +22,7 @@ public class StudentService {
     private final StudentMapper mapper;
     private final AttendanceService attendanceService;
     private final CourseService courseService;
-    private final CourseMapper courseMapper;
+    private final GradeService gradeService;
 
     public StudentResponse save (StudentRequest studentRequest) {
         var savedStudent = studentRepository.save(mapper.toEntity(studentRequest));
@@ -72,6 +73,27 @@ public class StudentService {
 
         studentRepository.save(student);
         courseService.save(course);
+    }
+
+    public void addGrade(GradeRequest gradeRequest) {
+        var student = studentRepository.findById(gradeRequest.student()).orElseThrow(() ->
+                new RuntimeException("Student not found with id: " + gradeRequest.student())
+        );
+
+        var grade = gradeService.create(gradeRequest, student);
+
+        student.getGrades().add(grade);
+        studentRepository.save(student);
+    }
+
+    public void removeGrade(UUID studentId, UUID gradeId) {
+        var student = studentRepository.findById(studentId).orElseThrow(() ->
+                new RuntimeException("Student not found with id: " + studentId)
+        );
+
+        student.getGrades().removeIf(grade -> grade.getId().equals(gradeId));
+        gradeService.delete(gradeId);
+        studentRepository.save(student);
     }
 
     public void delete(UUID studentId) {
