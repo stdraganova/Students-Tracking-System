@@ -10,5 +10,7 @@ public interface CourseMapper {
 
     Course toEntity(CourseRequest courseRequest);
 
+    Course toEntity(CourseResponse courseResponse);
+
     CourseResponse toResponse(Course course);
 }

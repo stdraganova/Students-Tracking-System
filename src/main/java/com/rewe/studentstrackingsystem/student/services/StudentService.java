@@ -2,6 +2,8 @@ package com.rewe.studentstrackingsystem.student.services;
 
 import com.rewe.studentstrackingsystem.attendance.dtos.AttendanceRequest;
 import com.rewe.studentstrackingsystem.attendance.services.AttendanceService;
+import com.rewe.studentstrackingsystem.course.mapper.CourseMapper;
+import com.rewe.studentstrackingsystem.course.services.CourseService;
 import com.rewe.studentstrackingsystem.student.dto.StudentRequest;
 import com.rewe.studentstrackingsystem.student.dto.StudentResponse;
 import com.rewe.studentstrackingsystem.student.mapper.StudentMapper;
@@ -18,6 +20,8 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final StudentMapper mapper;
     private final AttendanceService attendanceService;
+    private final CourseService courseService;
+    private final CourseMapper courseMapper;
 
     public StudentResponse save (StudentRequest studentRequest) {
         var savedStudent = studentRepository.save(mapper.toEntity(studentRequest));
@@ -44,6 +48,30 @@ public class StudentService {
 
         attendanceService.delete(attendanceId);
         studentRepository.save(student);
+    }
+
+    public void addCourse(UUID courseId, UUID studentId) {
+        var course = courseService.getCourseById(courseId);
+        var student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+
+        student.getCourses().add(course);
+        course.getStudents().add(student);
+
+        studentRepository.save(student);
+        courseService.save(course);
+    }
+
+    public void removeCourse(UUID courseId, UUID studentId) {
+        var course = courseService.getCourseById(courseId);
+        var student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentId));
+
+        student.getCourses().remove(course);
+        course.getStudents().remove(student);
+
+        studentRepository.save(student);
+        courseService.save(course);
     }
 
     public void delete(UUID studentId) {
