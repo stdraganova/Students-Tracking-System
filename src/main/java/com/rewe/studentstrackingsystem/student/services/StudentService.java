@@ -30,10 +30,11 @@ public class StudentService {
     }
 
     public void addAttendance(AttendanceRequest attendanceRequest) {
-        var attendance = attendanceService.create(attendanceRequest);
         var student = studentRepository.findById(attendanceRequest.studentId()).orElseThrow(() ->
                 new RuntimeException("Student not found with id: " + attendanceRequest.studentId())
         );
+
+        var attendance = attendanceService.create(attendanceRequest, student);
 
         student.getAttendances().add(attendance);
         studentRepository.save(student);

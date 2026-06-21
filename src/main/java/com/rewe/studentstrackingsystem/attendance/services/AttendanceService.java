@@ -4,6 +4,7 @@ import com.rewe.studentstrackingsystem.attendance.dtos.AttendanceRequest;
 import com.rewe.studentstrackingsystem.attendance.entity.Attendance;
 import com.rewe.studentstrackingsystem.attendance.repository.AttendanceRepository;
 import com.rewe.studentstrackingsystem.course.repository.CourseRepository;
+import com.rewe.studentstrackingsystem.student.entity.Student;
 import com.rewe.studentstrackingsystem.student.repository.StudentRepository;
 import com.rewe.studentstrackingsystem.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,7 @@ public class AttendanceService {
     private final TeacherRepository teacherRepository;
     private final CourseRepository courseRepository;
 
-    public Attendance create (AttendanceRequest attendanceRequest){
-        var student = studentRepository.findById(attendanceRequest.studentId()).orElseThrow(() ->
-                new RuntimeException("Student not found with id: " + attendanceRequest.studentId())
-        );
-
+    public Attendance create (AttendanceRequest attendanceRequest, Student student) {
         var teacher = teacherRepository.findById(attendanceRequest.teacherId()).orElseThrow(() ->
                 new RuntimeException("Teacher not found with id: " + attendanceRequest.teacherId())
         );

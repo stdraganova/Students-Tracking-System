@@ -7,8 +7,6 @@ import com.rewe.studentstrackingsystem.grade.entity.Grade;
 import com.rewe.studentstrackingsystem.grade.mapper.GradeMapper;
 import com.rewe.studentstrackingsystem.grade.repository.GradeRepository;
 import com.rewe.studentstrackingsystem.student.entity.Student;
-import com.rewe.studentstrackingsystem.student.repository.StudentRepository;
-import com.rewe.studentstrackingsystem.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
