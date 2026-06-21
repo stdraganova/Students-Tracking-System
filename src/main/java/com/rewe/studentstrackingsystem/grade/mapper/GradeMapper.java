@@ -13,5 +13,7 @@ public interface GradeMapper {
     @Mapping(target = "course", ignore = true)
     Grade toEntity(GradeRequest gradeRequest);
 
+    @Mapping(target = "studentId", source = "student.id")
+    @Mapping(target = "courseId", source = "course.id")
     GradeResponse toResponse(Grade grade);
 }

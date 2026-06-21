@@ -1,13 +1,13 @@
 package com.rewe.studentstrackingsystem.course.dto;
 
 import com.rewe.studentstrackingsystem.student.dto.StudentResponse;
-import com.rewe.studentstrackingsystem.teacher.entity.Teacher;
+import com.rewe.studentstrackingsystem.teacher.dtos.TeacherResponse;
 
 import java.util.List;
 
 public record CourseResponse(
         String name,
-        Teacher teacher,
+        TeacherResponse teacher,
         List<StudentResponse> students
 ) {
 }

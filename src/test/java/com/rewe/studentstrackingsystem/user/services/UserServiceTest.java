@@ -3,6 +3,7 @@ package com.rewe.studentstrackingsystem.user.services;
 import com.rewe.studentstrackingsystem.user.dto.UserRequest;
 import com.rewe.studentstrackingsystem.user.entity.Role;
 import com.rewe.studentstrackingsystem.user.entity.User;
+import com.rewe.studentstrackingsystem.exception.InvalidOperationException;
 import com.rewe.studentstrackingsystem.user.mapper.UserMapper;
 import com.rewe.studentstrackingsystem.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -93,8 +94,8 @@ class UserServiceTest {
 
         when(mapper.toEntity(request)).thenReturn(user);
 
-        com.rewe.studentstrackingsystem.exception.InvalidOperationException ex =
-                assertThrows(com.rewe.studentstrackingsystem.exception.InvalidOperationException.class,
+        InvalidOperationException ex =
+                assertThrows(InvalidOperationException.class,
                         () -> userService.save(request));
         assertEquals("Cannot create ADMIN users via API", ex.getMessage());
 
@@ -106,8 +107,10 @@ class UserServiceTest {
         UUID id = UUID.randomUUID();
 
         when(userRepository.existsById(id)).thenReturn(true);
+        doNothing().when(userRepository).deleteById(id);
 
         userService.delete(id);
 
         verify(userRepository).deleteById(id);
+}
 }

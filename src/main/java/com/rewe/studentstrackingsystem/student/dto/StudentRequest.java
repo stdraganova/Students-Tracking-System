@@ -1,9 +1,10 @@
 package com.rewe.studentstrackingsystem.student.dto;
 
-import com.rewe.studentstrackingsystem.user.entity.User;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.UUID;
+
 public record StudentRequest(
-        @NotNull User user
+        @NotNull UUID userId
 ) {
 }

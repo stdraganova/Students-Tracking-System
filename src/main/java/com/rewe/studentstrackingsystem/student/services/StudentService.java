@@ -9,8 +9,10 @@ import com.rewe.studentstrackingsystem.grade.dto.GradeRequest;
 import com.rewe.studentstrackingsystem.grade.services.GradeService;
 import com.rewe.studentstrackingsystem.student.dto.StudentRequest;
 import com.rewe.studentstrackingsystem.student.dto.StudentResponse;
+import com.rewe.studentstrackingsystem.student.entity.Student;
 import com.rewe.studentstrackingsystem.student.mapper.StudentMapper;
 import com.rewe.studentstrackingsystem.student.repository.StudentRepository;
+import com.rewe.studentstrackingsystem.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,11 +35,19 @@ public class StudentService {
     private final AttendanceService attendanceService;
     private final CourseService courseService;
     private final GradeService gradeService;
+    private final UserRepository userRepository;
 
     public StudentResponse save(StudentRequest studentRequest) {
         Objects.requireNonNull(studentRequest, "StudentRequest cannot be null");
 
-        var savedStudent = studentRepository.save(mapper.toEntity(studentRequest));
+        var user = userRepository.findById(studentRequest.userId())
+                .orElseThrow(() -> ResourceNotFoundException.of("User", studentRequest.userId().toString()));
+
+        var student = new Student();
+        student.setUser(user);
+        user.setStudent(student);
+
+        var savedStudent = studentRepository.save(student);
         log.info("Student saved successfully: {}", savedStudent.getId());
         return mapper.toResponse(savedStudent);
     }
@@ -83,9 +93,9 @@ public class StudentService {
         var student = studentRepository.findById(studentId)
                 .orElseThrow(() -> ResourceNotFoundException.of(STUDENT_RESOURCE, studentId.toString()));
 
-        var ifStudentContainsCourse = student.getCourses().stream().anyMatch(c -> c.getId().equals(courseId));
+        var studentAlreadyEnrolled = student.getCourses().stream().anyMatch(c -> c.getId().equals(courseId));
 
-        if (ifStudentContainsCourse) {
+        if (studentAlreadyEnrolled) {
             log.warn("Student {} already enrolled in course {}", studentId, courseId);
             throw new ValidationException("Student is already enrolled in this course");
         }
