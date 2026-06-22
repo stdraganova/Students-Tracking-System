@@ -5,6 +5,7 @@ import com.rewe.studentstrackingsystem.attendance.entity.Attendance;
 import com.rewe.studentstrackingsystem.attendance.repository.AttendanceRepository;
 import com.rewe.studentstrackingsystem.course.repository.CourseRepository;
 import com.rewe.studentstrackingsystem.exception.ResourceNotFoundException;
+import com.rewe.studentstrackingsystem.exception.ValidationException;
 import com.rewe.studentstrackingsystem.student.entity.Student;
 import com.rewe.studentstrackingsystem.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,10 @@ public class AttendanceService {
     public Attendance create(AttendanceRequest attendanceRequest, Student student) {
         Objects.requireNonNull(attendanceRequest, "AttendanceRequest cannot be null");
         Objects.requireNonNull(student, "Student cannot be null");
+
+        if (attendanceRequest.attendanceDate() == null) {
+            throw new ValidationException("Attendance date cannot be null");
+        }
 
         var teacher = teacherRepository.findById(attendanceRequest.teacherId())
                 .orElseThrow(() -> ResourceNotFoundException.of("Teacher", attendanceRequest.teacherId().toString()));

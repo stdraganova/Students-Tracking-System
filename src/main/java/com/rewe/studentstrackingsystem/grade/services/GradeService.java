@@ -2,6 +2,7 @@ package com.rewe.studentstrackingsystem.grade.services;
 
 import com.rewe.studentstrackingsystem.course.repository.CourseRepository;
 import com.rewe.studentstrackingsystem.exception.ResourceNotFoundException;
+import com.rewe.studentstrackingsystem.exception.ValidationException;
 import com.rewe.studentstrackingsystem.grade.dto.GradeRequest;
 import com.rewe.studentstrackingsystem.grade.dto.GradeResponse;
 import com.rewe.studentstrackingsystem.grade.entity.Grade;
@@ -37,6 +38,14 @@ public class GradeService {
     public Grade create(GradeRequest gradeRequest, Student student) {
         Objects.requireNonNull(gradeRequest, "GradeRequest cannot be null");
         Objects.requireNonNull(student, "Student cannot be null");
+
+        if (gradeRequest.grade() == null || gradeRequest.grade() < 0 || gradeRequest.grade() > 100) {
+            throw new ValidationException("Grade must be between 0 and 100");
+        }
+
+        if (gradeRequest.creationDate() == null) {
+            throw new ValidationException("Grade creation date cannot be null");
+        }
 
         var course = courseRepository.findById(gradeRequest.course())
                 .orElseThrow(() -> ResourceNotFoundException.of("Course", gradeRequest.course().toString()));
