@@ -319,10 +319,8 @@ public class PageController {
     @GetMapping("/admin/courses/{courseId}/delete")
     @PreAuthorize("hasRole('ADMIN')")
     public ModelAndView deleteCourse(@PathVariable("courseId") String courseId) {
-        try {
             courseService.delete(UUID.fromString(courseId));
-        } catch (Exception _) {
-        }
+
         return new ModelAndView("redirect:/admin/courses-list");
     }
 
