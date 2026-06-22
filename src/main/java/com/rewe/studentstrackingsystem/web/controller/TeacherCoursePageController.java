@@ -263,23 +263,7 @@ public class TeacherCoursePageController {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
-    private UUID parseUuidOrNull(String value) {
-        if (value == null || value.isBlank()) return null;
-        try {
-            return UUID.fromString(value);
-        } catch (IllegalArgumentException _) {
-            return null;
-        }
-    }
-
-    // ── View records ───────────────────────────────────────────────────────
-
     public record StudentListRow(String studentId, String fullName, String email) {
-    }
-
-    public record StudentCourseManagementRow(
-            String studentId, String fullName, String email,
-            List<GradeRow> grades, List<AttendanceRow> attendances) {
     }
 
     public record GradeRow(String id, Double value, java.time.LocalDate date) {

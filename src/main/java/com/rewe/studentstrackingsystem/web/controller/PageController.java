@@ -107,7 +107,7 @@ public class PageController {
             modelAndView.addObject("registrationError", true);
             modelAndView.addObject("registrationErrorMessage", ex.getMessage());
             return modelAndView;
-        } catch (DataIntegrityViolationException ex) {
+        } catch (DataIntegrityViolationException _) {
             var modelAndView = new ModelAndView(INDEX_VIEW);
             modelAndView.addObject("availableRoles", List.of(ROLE_STUDENT, ROLE_TEACHER));
             modelAndView.addObject("activeMode", MODE_REGISTER);
