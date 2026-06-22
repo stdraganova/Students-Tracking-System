@@ -7,6 +7,7 @@ import com.rewe.studentstrackingsystem.exception.ValidationException;
 import com.rewe.studentstrackingsystem.student.services.StudentService;
 import com.rewe.studentstrackingsystem.user.dto.UserRequest;
 import com.rewe.studentstrackingsystem.user.dto.UserUpdateRequest;
+import com.rewe.studentstrackingsystem.user.entity.Role;
 import com.rewe.studentstrackingsystem.user.repository.UserRepository;
 import com.rewe.studentstrackingsystem.user.services.UserService;
 import com.rewe.studentstrackingsystem.teacher.services.TeacherService;
@@ -31,6 +32,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Controller
@@ -65,7 +67,7 @@ public class PageController {
         }
 
         var modelAndView = new ModelAndView(INDEX_VIEW);
-        modelAndView.addObject("registrationForm", new RegistrationForm(null, null, null, null, null, null, null));
+        modelAndView.addObject("registrationForm", new RegistrationForm("", "", "", "", "", null, Role.STUDENT));
         modelAndView.addObject("availableRoles", List.of(ROLE_STUDENT, ROLE_TEACHER));
         modelAndView.addObject("activeMode", normalizeMode(mode));
         modelAndView.addObject("loginError", loginError != null);
@@ -197,7 +199,7 @@ public class PageController {
                 return new ModelAndView("redirect:/courses?enrollError&enrollErrorMsg=Student+profile+not+found");
             }
 
-            studentService.addCourse(java.util.UUID.fromString(courseId), user.getStudent().getId());
+            studentService.addCourse(UUID.fromString(courseId), user.getStudent().getId());
             return new ModelAndView("redirect:/courses?enrolled");
         } catch (ValidationException ex) {
             var errorMessage = URLEncoder.encode(ex.getMessage(), StandardCharsets.UTF_8);
@@ -272,7 +274,7 @@ public class PageController {
             return new ModelAndView("redirect:/admin/courses?courseError");
         }
 
-        courseService.create(new CourseRequest(form.name(), java.util.UUID.fromString(form.teacherId())));
+        courseService.create(new CourseRequest(form.name(), UUID.fromString(form.teacherId())));
         return new ModelAndView("redirect:/admin/courses?created");
     }
 
@@ -284,7 +286,7 @@ public class PageController {
             return new ModelAndView("redirect:/admin/courses-list?courseError");
         }
 
-        courseService.create(new CourseRequest(form.name(), java.util.UUID.fromString(form.teacherId())));
+        courseService.create(new CourseRequest(form.name(), UUID.fromString(form.teacherId())));
         return new ModelAndView("redirect:/admin/courses-list?created");
     }
 
@@ -318,9 +320,8 @@ public class PageController {
     @PreAuthorize("hasRole('ADMIN')")
     public ModelAndView deleteCourse(@PathVariable("courseId") String courseId) {
         try {
-            courseService.delete(java.util.UUID.fromString(courseId));
+            courseService.delete(UUID.fromString(courseId));
         } catch (Exception _) {
-            // Course may not exist or invalid format
         }
         return new ModelAndView("redirect:/admin/courses-list");
     }

@@ -45,7 +45,6 @@ public class CourseService {
         newCourse.setTeacher(teacher);
         var savedCourse = courseRepository.save(newCourse);
 
-        // Keep both sides consistent in the current persistence context.
         teacher.getCourses().add(savedCourse);
 
         log.info("Course created: {} by teacher: {}", savedCourse.getId(), teacher.getId());

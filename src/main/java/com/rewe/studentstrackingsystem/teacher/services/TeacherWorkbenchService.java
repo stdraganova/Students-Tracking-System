@@ -12,6 +12,7 @@ import com.rewe.studentstrackingsystem.grade.services.GradeService;
 import com.rewe.studentstrackingsystem.student.repository.StudentRepository;
 import com.rewe.studentstrackingsystem.teacher.dtos.TeacherCourseOptionResponse;
 import com.rewe.studentstrackingsystem.teacher.dtos.TeacherStudentOptionResponse;
+import com.rewe.studentstrackingsystem.teacher.entity.Teacher;
 import com.rewe.studentstrackingsystem.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -127,7 +128,7 @@ public class TeacherWorkbenchService {
         }
     }
 
-    private com.rewe.studentstrackingsystem.teacher.entity.Teacher getTeacherByUsername(String teacherUsername) {
+    private Teacher getTeacherByUsername(String teacherUsername) {
         return teacherRepository.findByUserUsername(teacherUsername)
                 .orElseThrow(() -> ResourceNotFoundException.of("Teacher", teacherUsername));
     }
