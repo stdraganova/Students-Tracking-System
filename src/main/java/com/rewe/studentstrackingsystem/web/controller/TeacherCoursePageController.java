@@ -30,13 +30,14 @@ import org.springframework.web.servlet.ModelAndView;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
-import java.util.List;
 import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('TEACHER')")
 public class TeacherCoursePageController {
+
+    private static final String COURSES_REDIRECT = "redirect:/courses";
 
     private final TeacherRepository teacherRepository;
     private final CourseRepository courseRepository;
@@ -47,18 +48,16 @@ public class TeacherCoursePageController {
     private final AttendanceService attendanceService;
     private final TeacherWorkbenchService teacherWorkbenchService;
 
-    // ── Student list for a course ───────────────────────────────────────────
-
     @GetMapping("/teacher/courses/{courseId}/students")
     public ModelAndView courseStudents(@PathVariable("courseId") UUID courseId,
                                        @AuthenticationPrincipal UserDetails userDetails,
                                        @RequestParam(value = "success", required = false) String success,
                                        @RequestParam(value = "error", required = false) String error) {
         var teacher = teacherRepository.findByUserUsername(userDetails.getUsername()).orElse(null);
-        if (teacher == null) return new ModelAndView("redirect:/courses");
+        if (teacher == null) return new ModelAndView(COURSES_REDIRECT);
 
         var course = courseRepository.findByIdAndTeacherId(courseId, teacher.getId()).orElse(null);
-        if (course == null) return new ModelAndView("redirect:/courses");
+        if (course == null) return new ModelAndView(COURSES_REDIRECT);
 
         var students = studentRepository.findDistinctByCoursesId(courseId).stream()
                 .map(s -> new StudentListRow(
@@ -77,8 +76,6 @@ public class TeacherCoursePageController {
         return mv;
     }
 
-    // ── Student detail: grades + attendance ────────────────────────────────
-
     @GetMapping("/teacher/courses/{courseId}/students/{studentId}")
     public ModelAndView studentDetail(@PathVariable("courseId") UUID courseId,
                                       @PathVariable("studentId") UUID studentId,
@@ -86,10 +83,10 @@ public class TeacherCoursePageController {
                                       @RequestParam(value = "success", required = false) String success,
                                       @RequestParam(value = "error", required = false) String error) {
         var teacher = teacherRepository.findByUserUsername(userDetails.getUsername()).orElse(null);
-        if (teacher == null) return new ModelAndView("redirect:/courses");
+        if (teacher == null) return new ModelAndView(COURSES_REDIRECT);
 
         var course = courseRepository.findByIdAndTeacherId(courseId, teacher.getId()).orElse(null);
-        if (course == null) return new ModelAndView("redirect:/courses");
+        if (course == null) return new ModelAndView(COURSES_REDIRECT);
 
         var student = studentRepository.findById(studentId).orElse(null);
         if (student == null)
@@ -118,8 +115,6 @@ public class TeacherCoursePageController {
         mv.addObject("error", error);
         return mv;
     }
-
-    // ── Grade actions ──────────────────────────────────────────────────────
 
     @PostMapping("/teacher/courses/{courseId}/students/{studentId}/grades")
     public ModelAndView addGrade(@PathVariable("courseId") UUID courseId,
@@ -184,21 +179,22 @@ public class TeacherCoursePageController {
         }
     }
 
-    // ── Attendance actions ─────────────────────────────────────────────────
-
     @PostMapping("/teacher/courses/{courseId}/students/{studentId}/attendance")
     public ModelAndView addAttendance(@PathVariable("courseId") UUID courseId,
                                       @PathVariable("studentId") UUID studentId,
                                       @Valid @ModelAttribute TeacherAttendanceForm form,
                                       BindingResult bindingResult,
                                       @AuthenticationPrincipal UserDetails userDetails) {
+        var teacher = teacherRepository.findByUserUsername(userDetails.getUsername()).orElse(null);
+        if (teacher == null) return new ModelAndView(COURSES_REDIRECT);
+
         if (bindingResult.hasErrors()) {
             return redirectToStudent(courseId, studentId, null, "Please provide a valid attendance date and status");
         }
         try {
             teacherWorkbenchService.addAttendance(userDetails.getUsername(),
                     new AttendanceRequest(form.attendanceDate(),
-                            Boolean.TRUE.equals(form.present()), studentId, null, courseId));
+                            Boolean.TRUE.equals(form.present()), studentId, teacher.getId(), courseId));
             return redirectToStudent(courseId, studentId, "Attendance added", null);
         } catch (ValidationException ex) {
             return redirectToStudent(courseId, studentId, null, ex.getMessage());
@@ -214,13 +210,16 @@ public class TeacherCoursePageController {
                                          @Valid @ModelAttribute TeacherAttendanceForm form,
                                          BindingResult bindingResult,
                                          @AuthenticationPrincipal UserDetails userDetails) {
+        var teacher = teacherRepository.findByUserUsername(userDetails.getUsername()).orElse(null);
+        if (teacher == null) return new ModelAndView(COURSES_REDIRECT);
+
         if (bindingResult.hasErrors()) {
             return redirectToStudent(courseId, studentId, null, "Please provide a valid attendance date and status");
         }
         try {
             teacherWorkbenchService.updateAttendance(userDetails.getUsername(), attendanceId,
                     new AttendanceRequest(form.attendanceDate(),
-                            Boolean.TRUE.equals(form.present()), studentId, null, courseId));
+                            Boolean.TRUE.equals(form.present()), studentId, teacher.getId(), courseId));
             return redirectToStudent(courseId, studentId, "Attendance updated", null);
         } catch (ValidationException ex) {
             return redirectToStudent(courseId, studentId, null, ex.getMessage());
@@ -251,7 +250,6 @@ public class TeacherCoursePageController {
         }
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────────
 
     private ModelAndView redirectToStudent(UUID courseId, UUID studentId, String success, String error) {
         String base = "/teacher/courses/" + courseId + "/students/" + studentId;

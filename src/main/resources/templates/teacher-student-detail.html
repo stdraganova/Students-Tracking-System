@@ -107,21 +107,18 @@
         <div th:if="${success}" class="message success" th:text="${success}"></div>
         <div th:if="${error}"   class="message error"   th:text="${error}"></div>
 
-        <!-- ════════════════ GRADES ════════════════ -->
         <div class="section-heading">
             <h2>Grades</h2>
             <button type="button" class="btn-add" title="Add grade" onclick="showAddGrade()">+</button>
         </div>
 
         <div class="dtable">
-            <!-- header -->
             <div class="drow grades-row header">
                 <div class="dcell">Date</div>
                 <div class="dcell">Grade (2–6)</div>
                 <div class="dcell center">Actions</div>
             </div>
 
-            <!-- existing grade rows — each row is its own <form> -->
             <th:block th:each="grade : ${grades}">
                 <form class="drow grades-row"
                       th:action="@{/teacher/courses/{cId}/students/{sId}/grades/{gId}/update(cId=${courseId},sId=${studentId},gId=${grade.id()})}"
@@ -144,7 +141,6 @@
                 </form>
             </th:block>
 
-            <!-- add-grade row (hidden) -->
             <form id="addGradeForm" class="drow grades-row add-row"
                   th:action="@{/teacher/courses/{cId}/students/{sId}/grades(cId=${courseId},sId=${studentId})}"
                   method="post">
@@ -171,21 +167,18 @@
             </div>
         </div>
 
-        <!-- ════════════════ ATTENDANCE ════════════════ -->
         <div class="section-heading">
             <h2>Attendance</h2>
             <button type="button" class="btn-add" title="Add attendance" onclick="showAddAttendance()">+</button>
         </div>
 
         <div class="dtable">
-            <!-- header -->
             <div class="drow attend-row header">
                 <div class="dcell">Date</div>
                 <div class="dcell">Status</div>
                 <div class="dcell center">Actions</div>
             </div>
 
-            <!-- existing attendance rows -->
             <th:block th:each="attendance : ${attendances}">
                 <form class="drow attend-row"
                       th:action="@{/teacher/courses/{cId}/students/{sId}/attendance/{aId}/update(cId=${courseId},sId=${studentId},aId=${attendance.id()})}"
@@ -210,7 +203,6 @@
                 </form>
             </th:block>
 
-            <!-- add-attendance row (hidden) -->
             <form id="addAttendanceForm" class="drow attend-row add-row"
                   th:action="@{/teacher/courses/{cId}/students/{sId}/attendance(cId=${courseId},sId=${studentId})}"
                   method="post">

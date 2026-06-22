@@ -18,7 +18,6 @@
         <div th:if="${enrolled}" class="message success">Successfully enrolled in the course!</div>
         <div th:if="${enrollError}" class="message error" th:text="${enrollErrorMsg != null ? enrollErrorMsg : 'Could not enroll in course.'}">Could not enroll in course.</div>
 
-        <!-- Enrolled Courses (Student) -->
         <div th:if="${isStudent}">
             <h2 style="margin-top: 16px;">My Enrolled Courses</h2>
             <table>
@@ -39,7 +38,6 @@
                 </tbody>
             </table>
 
-            <!-- Available Courses to Enroll -->
             <h2 style="margin-top: 24px;">Available Courses</h2>
             <table th:if="${not #lists.isEmpty(availableCourses)}">
                 <thead>
@@ -67,7 +65,6 @@
             </div>
         </div>
 
-        <!-- Teacher view -->
         <table th:if="${isTeacher}">
             <thead>
             <tr>
