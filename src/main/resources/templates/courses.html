@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>Courses</h1>
+        <div class="actions">
+            <a class="btn secondary" th:href="@{/home}">Back to Home</a>
+            <a class="btn" th:href="@{/profile}">Profile</a>
+        </div>
+
+        <table th:if="${isStudent}">
+            <thead>
+            <tr>
+                <th>Course</th>
+                <th>Teacher</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="course : ${dashboard.studentCourses}">
+                <td th:text="${course.courseName}"></td>
+                <td th:text="${course.teacherName}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(dashboard.studentCourses)}">
+                <td colspan="2">No enrolled courses available.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <table th:if="${isTeacher}">
+            <thead>
+            <tr>
+                <th>Course</th>
+                <th>Enrolled Students</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="course : ${dashboard.teacherCourses}">
+                <td th:text="${course.courseName}"></td>
+                <td th:text="${course.enrolledStudents}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(dashboard.teacherCourses)}">
+                <td colspan="2">No teaching courses available.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div th:if="${!isStudent and !isTeacher}" class="message">No courses available for your role.</div>
+    </div>
+</div>
+</body>
+</html>
+

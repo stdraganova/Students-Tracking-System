@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -42,10 +43,10 @@ public class CourseService {
                 .orElseThrow(() -> ResourceNotFoundException.of("Teacher", courseRequest.teacherId().toString()));
 
         newCourse.setTeacher(teacher);
-        teacher.getCourses().add(newCourse);
-
-        teacherRepository.save(teacher);
         var savedCourse = courseRepository.save(newCourse);
+
+        // Keep both sides consistent in the current persistence context.
+        teacher.getCourses().add(savedCourse);
 
         log.info("Course created: {} by teacher: {}", savedCourse.getId(), teacher.getId());
         return courseMapper.toResponse(savedCourse);
@@ -56,6 +57,37 @@ public class CourseService {
 
         return courseRepository.findById(courseId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Course", courseId.toString()));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Course> getCoursesByTeacher(UUID teacherId) {
+        Objects.requireNonNull(teacherId, "Teacher ID cannot be null");
+        return courseRepository.findByTeacherId(teacherId);
+    }
+
+    public CourseResponse update(UUID courseId, CourseRequest request) {
+        Objects.requireNonNull(courseId, "Course ID cannot be null");
+        Objects.requireNonNull(request, "CourseRequest cannot be null");
+
+        var course = courseRepository.findById(courseId)
+                .orElseThrow(() -> ResourceNotFoundException.of("Course", courseId.toString()));
+
+        course.setName(request.name());
+
+        if (request.teacherId() != null && (course.getTeacher() == null || !request.teacherId().equals(course.getTeacher().getId()))) {
+            var teacher = teacherRepository.findById(request.teacherId())
+                    .orElseThrow(() -> ResourceNotFoundException.of("Teacher", request.teacherId().toString()));
+
+            if (course.getTeacher() != null) {
+                course.getTeacher().getCourses().remove(course);
+            }
+
+            course.setTeacher(teacher);
+            teacher.getCourses().add(course);
+        }
+
+        var updatedCourse = courseRepository.save(course);
+        return courseMapper.toResponse(updatedCourse);
     }
 
     public void delete(UUID courseId) {

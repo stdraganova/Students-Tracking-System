@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grades</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>Grades</h1>
+        <div class="actions">
+            <a class="btn secondary" th:href="@{/home}">Back to Home</a>
+            <a class="btn" th:href="@{/profile}">Profile</a>
+        </div>
+
+        <div th:if="${!isStudent}" class="message">Grades are available for student accounts only.</div>
+
+        <table th:if="${isStudent}">
+            <thead>
+            <tr>
+                <th>Course</th>
+                <th>Grade</th>
+                <th>Date</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="grade : ${dashboard.grades}">
+                <td th:text="${grade.courseName}"></td>
+                <td th:text="${grade.value}"></td>
+                <td th:text="${grade.creationDate}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(dashboard.grades)}">
+                <td colspan="3">No grades available.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
+
