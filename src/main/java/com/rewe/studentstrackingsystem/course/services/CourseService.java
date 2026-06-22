@@ -100,4 +100,9 @@ public class CourseService {
         log.info("Deleting course: {}", courseId);
         courseRepository.deleteById(courseId);
     }
+
+    @Transactional(readOnly = true)
+    public List<Course> getAll() {
+        return courseRepository.findAll();
+    }
 }

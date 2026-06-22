@@ -21,10 +21,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
@@ -219,6 +216,55 @@ public class PageController {
         return new ModelAndView("redirect:/admin/courses?created");
     }
 
+    @PostMapping("/admin/courses-list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ModelAndView createCourseFromList(@Valid @ModelAttribute("courseCreateForm") CourseCreateForm form,
+                                             BindingResult bindingResult) {
+        if (bindingResult.hasErrors() || form.teacherId() == null || form.teacherId().isBlank()) {
+            return new ModelAndView("redirect:/admin/courses-list?courseError");
+        }
+
+        courseService.create(new CourseRequest(form.name(), java.util.UUID.fromString(form.teacherId())));
+        return new ModelAndView("redirect:/admin/courses-list?created");
+    }
+
+    @GetMapping("/admin/courses-list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ModelAndView coursesList(
+            @RequestParam(value = "created", required = false) String created,
+            @RequestParam(value = "courseError", required = false) String courseError) {
+        var courses = courseService.getAll().stream()
+                .map(c -> new CourseListItem(
+                        c.getId().toString(),
+                        c.getName(),
+                        c.getTeacher() != null ? c.getTeacher().getUser().getFirstName() + " " + c.getTeacher().getUser().getLastName() : "N/A"
+                ))
+                .toList();
+
+        var teachers = teacherService.getAll().stream()
+                .map(t -> new TeacherOption(t.getId().toString(), t.getUser().getFirstName() + " " + t.getUser().getLastName()))
+                .toList();
+
+        var modelAndView = new ModelAndView("coursesList");
+        modelAndView.addObject("courses", courses);
+        modelAndView.addObject("courseCreateForm", new CourseCreateForm(null, null));
+        modelAndView.addObject("teachers", teachers);
+        modelAndView.addObject("created", created != null);
+        modelAndView.addObject("courseError", courseError != null);
+        return modelAndView;
+    }
+
+    @GetMapping("/admin/courses/{courseId}/delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ModelAndView deleteCourse(@PathVariable("courseId") String courseId) {
+        try {
+            courseService.delete(java.util.UUID.fromString(courseId));
+        } catch (Exception ex) {
+            // Course may not exist or invalid format
+        }
+        return new ModelAndView("redirect:/admin/courses-list");
+    }
+
     private ModelAndView viewWithCommonModel(String viewName, DashboardService.DashboardView dashboard) {
         var modelAndView = new ModelAndView(viewName);
         modelAndView.addObject("dashboard", dashboard);
@@ -239,7 +285,8 @@ public class PageController {
         return authentication != null
                 && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken);
-    }
-}
+     }
 
-
+     public record CourseListItem(String id, String name, String teacher) {
+     }
+ }
