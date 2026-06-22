@@ -3,8 +3,11 @@ package com.rewe.studentstrackingsystem.web.controller;
 import com.rewe.studentstrackingsystem.course.dto.CourseRequest;
 import com.rewe.studentstrackingsystem.course.services.CourseService;
 import com.rewe.studentstrackingsystem.exception.InvalidOperationException;
+import com.rewe.studentstrackingsystem.exception.ValidationException;
+import com.rewe.studentstrackingsystem.student.services.StudentService;
 import com.rewe.studentstrackingsystem.user.dto.UserRequest;
 import com.rewe.studentstrackingsystem.user.dto.UserUpdateRequest;
+import com.rewe.studentstrackingsystem.user.repository.UserRepository;
 import com.rewe.studentstrackingsystem.user.services.UserService;
 import com.rewe.studentstrackingsystem.teacher.services.TeacherService;
 import com.rewe.studentstrackingsystem.web.model.CourseCreateForm;
@@ -24,7 +27,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -41,6 +48,8 @@ public class PageController {
     private final DashboardService dashboardService;
     private final TeacherService teacherService;
     private final CourseService courseService;
+    private final StudentService studentService;
+    private final UserRepository userRepository;
 
     @GetMapping("/")
     public ModelAndView index(
@@ -142,9 +151,60 @@ public class PageController {
     }
 
     @GetMapping("/courses")
-    public ModelAndView courses(@AuthenticationPrincipal UserDetails userDetails) {
+    public ModelAndView courses(@AuthenticationPrincipal UserDetails userDetails,
+                                @RequestParam(value = "enrolled", required = false) String enrolled,
+                                @RequestParam(value = "enrollError", required = false) String enrollError,
+                                @RequestParam(value = "enrollErrorMsg", required = false) String enrollErrorMsg) {
         var dashboard = dashboardService.getDashboard(userDetails.getUsername());
-        return viewWithCommonModel("courses", dashboard);
+        var modelAndView = viewWithCommonModel("courses", dashboard);
+
+        modelAndView.addObject("enrolled", enrolled != null);
+        modelAndView.addObject("enrollError", enrollError != null);
+        modelAndView.addObject("enrollErrorMsg", enrollErrorMsg);
+
+        if (ROLE_STUDENT.equals(dashboard.role().name())) {
+            var enrolledCourseIds = dashboard.studentCourses().stream()
+                    .map(DashboardService.StudentCourseRow::id)
+                    .collect(Collectors.toSet());
+
+            var availableCourses = courseService.getAll().stream()
+                    .filter(course -> !enrolledCourseIds.contains(course.getId()))
+                    .map(course -> new AvailableCourseRow(
+                            course.getId().toString(),
+                            course.getName(),
+                            course.getTeacher() != null
+                                    ? course.getTeacher().getUser().getFirstName() + " " + course.getTeacher().getUser().getLastName()
+                                    : "N/A"
+                    ))
+                    .sorted(Comparator.comparing(AvailableCourseRow::name, String.CASE_INSENSITIVE_ORDER))
+                    .toList();
+
+            modelAndView.addObject("availableCourses", availableCourses);
+        }
+
+        return modelAndView;
+    }
+
+    @PostMapping("/courses/{courseId}/enroll")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ModelAndView enrollCourse(@PathVariable("courseId") String courseId,
+                                     @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            var user = userRepository.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new IllegalStateException("User not found"));
+
+            if (user.getStudent() == null) {
+                return new ModelAndView("redirect:/courses?enrollError&enrollErrorMsg=Student+profile+not+found");
+            }
+
+            studentService.addCourse(java.util.UUID.fromString(courseId), user.getStudent().getId());
+            return new ModelAndView("redirect:/courses?enrolled");
+        } catch (ValidationException ex) {
+            var errorMessage = URLEncoder.encode(ex.getMessage(), StandardCharsets.UTF_8);
+            return new ModelAndView("redirect:/courses?enrollError&enrollErrorMsg=" + errorMessage);
+        } catch (Exception _) {
+            return new ModelAndView("redirect:/courses?enrollError&enrollErrorMsg=Could+not+enroll+in+course");
+        }
     }
 
     @GetMapping("/profile")
@@ -259,7 +319,7 @@ public class PageController {
     public ModelAndView deleteCourse(@PathVariable("courseId") String courseId) {
         try {
             courseService.delete(java.util.UUID.fromString(courseId));
-        } catch (Exception ex) {
+        } catch (Exception _) {
             // Course may not exist or invalid format
         }
         return new ModelAndView("redirect:/admin/courses-list");
@@ -275,6 +335,9 @@ public class PageController {
     }
 
     public record TeacherOption(String id, String fullName) {
+    }
+
+    public record AvailableCourseRow(String id, String name, String teacherName) {
     }
 
     private String safe(String value) {
