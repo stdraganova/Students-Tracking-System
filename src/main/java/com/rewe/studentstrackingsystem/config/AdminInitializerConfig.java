@@ -16,7 +16,7 @@ import java.util.UUID;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class AdminBootstrapConfig {
+public class AdminInitializerConfig {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
