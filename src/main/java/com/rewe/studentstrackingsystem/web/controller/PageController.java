@@ -1,14 +1,16 @@
 package com.rewe.studentstrackingsystem.web.controller;
 
+import com.rewe.studentstrackingsystem.course.dto.AvailableCourseRow;
+import com.rewe.studentstrackingsystem.course.dto.CourseListItem;
 import com.rewe.studentstrackingsystem.course.dto.CourseRequest;
 import com.rewe.studentstrackingsystem.course.services.CourseService;
 import com.rewe.studentstrackingsystem.exception.InvalidOperationException;
 import com.rewe.studentstrackingsystem.exception.ValidationException;
 import com.rewe.studentstrackingsystem.student.services.StudentService;
+import com.rewe.studentstrackingsystem.teacher.dtos.TeacherOption;
 import com.rewe.studentstrackingsystem.user.dto.UserRequest;
 import com.rewe.studentstrackingsystem.user.dto.UserUpdateRequest;
 import com.rewe.studentstrackingsystem.user.entity.Role;
-import com.rewe.studentstrackingsystem.user.repository.UserRepository;
 import com.rewe.studentstrackingsystem.user.services.UserService;
 import com.rewe.studentstrackingsystem.teacher.services.TeacherService;
 import com.rewe.studentstrackingsystem.web.model.CourseCreateForm;
@@ -51,7 +53,6 @@ public class PageController {
     private final TeacherService teacherService;
     private final CourseService courseService;
     private final StudentService studentService;
-    private final UserRepository userRepository;
 
     @GetMapping("/")
     public ModelAndView index(
@@ -192,14 +193,7 @@ public class PageController {
     public ModelAndView enrollCourse(@PathVariable("courseId") String courseId,
                                      @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            var user = userRepository.findByUsername(userDetails.getUsername())
-                    .orElseThrow(() -> new IllegalStateException("User not found"));
-
-            if (user.getStudent() == null) {
-                return new ModelAndView("redirect:/courses?enrollError&enrollErrorMsg=Student+profile+not+found");
-            }
-
-            studentService.addCourse(UUID.fromString(courseId), user.getStudent().getId());
+            studentService.addCourseForUsername(UUID.fromString(courseId), userDetails.getUsername());
             return new ModelAndView("redirect:/courses?enrolled");
         } catch (ValidationException ex) {
             var errorMessage = URLEncoder.encode(ex.getMessage(), StandardCharsets.UTF_8);
@@ -333,12 +327,6 @@ public class PageController {
         return modelAndView;
     }
 
-    public record TeacherOption(String id, String fullName) {
-    }
-
-    public record AvailableCourseRow(String id, String name, String teacherName) {
-    }
-
     private String safe(String value) {
         return value == null ? "" : value;
     }
@@ -347,8 +335,5 @@ public class PageController {
         return authentication != null
                 && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken);
-     }
-
-     public record CourseListItem(String id, String name, String teacher) {
      }
  }

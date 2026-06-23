@@ -1,15 +1,7 @@
 package com.rewe.studentstrackingsystem.web.controller;
 
-import com.rewe.studentstrackingsystem.attendance.dtos.AttendanceRequest;
-import com.rewe.studentstrackingsystem.attendance.repository.AttendanceRepository;
-import com.rewe.studentstrackingsystem.attendance.services.AttendanceService;
-import com.rewe.studentstrackingsystem.course.repository.CourseRepository;
 import com.rewe.studentstrackingsystem.exception.ValidationException;
 import com.rewe.studentstrackingsystem.grade.dto.GradeRequest;
-import com.rewe.studentstrackingsystem.grade.repository.GradeRepository;
-import com.rewe.studentstrackingsystem.grade.services.GradeService;
-import com.rewe.studentstrackingsystem.student.repository.StudentRepository;
-import com.rewe.studentstrackingsystem.teacher.repository.TeacherRepository;
 import com.rewe.studentstrackingsystem.teacher.services.TeacherWorkbenchService;
 import com.rewe.studentstrackingsystem.web.model.TeacherAttendanceForm;
 import com.rewe.studentstrackingsystem.web.model.TeacherGradeForm;
@@ -29,7 +21,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Comparator;
 import java.util.UUID;
 
 @Controller
@@ -39,13 +30,6 @@ public class TeacherCoursePageController {
 
     private static final String COURSES_REDIRECT = "redirect:/courses";
 
-    private final TeacherRepository teacherRepository;
-    private final CourseRepository courseRepository;
-    private final StudentRepository studentRepository;
-    private final GradeRepository gradeRepository;
-    private final AttendanceRepository attendanceRepository;
-    private final GradeService gradeService;
-    private final AttendanceService attendanceService;
     private final TeacherWorkbenchService teacherWorkbenchService;
 
     @GetMapping("/teacher/courses/{courseId}/students")
@@ -53,24 +37,17 @@ public class TeacherCoursePageController {
                                        @AuthenticationPrincipal UserDetails userDetails,
                                        @RequestParam(value = "success", required = false) String success,
                                        @RequestParam(value = "error", required = false) String error) {
-        var teacher = teacherRepository.findByUserUsername(userDetails.getUsername()).orElse(null);
-        if (teacher == null) return new ModelAndView(COURSES_REDIRECT);
-
-        var course = courseRepository.findByIdAndTeacherId(courseId, teacher.getId()).orElse(null);
-        if (course == null) return new ModelAndView(COURSES_REDIRECT);
-
-        var students = studentRepository.findDistinctByCoursesId(courseId).stream()
-                .map(s -> new StudentListRow(
-                        s.getId().toString(),
-                        s.getUser().getFirstName() + " " + s.getUser().getLastName(),
-                        s.getUser().getEmail()))
-                .sorted(Comparator.comparing(StudentListRow::fullName, String.CASE_INSENSITIVE_ORDER))
-                .toList();
+        TeacherWorkbenchService.TeacherCourseStudentsView view;
+        try {
+            view = teacherWorkbenchService.getCourseStudentsView(userDetails.getUsername(), courseId);
+        } catch (Exception _) {
+            return new ModelAndView(COURSES_REDIRECT);
+        }
 
         var mv = new ModelAndView("teacher-course-students");
-        mv.addObject("courseId", course.getId().toString());
-        mv.addObject("courseName", course.getName());
-        mv.addObject("students", students);
+        mv.addObject("courseId", courseId.toString());
+        mv.addObject("courseName", view.courseName());
+        mv.addObject("students", view.students());
         mv.addObject("success", success);
         mv.addObject("error", error);
         return mv;
@@ -82,35 +59,20 @@ public class TeacherCoursePageController {
                                       @AuthenticationPrincipal UserDetails userDetails,
                                       @RequestParam(value = "success", required = false) String success,
                                       @RequestParam(value = "error", required = false) String error) {
-        var teacher = teacherRepository.findByUserUsername(userDetails.getUsername()).orElse(null);
-        if (teacher == null) return new ModelAndView(COURSES_REDIRECT);
-
-        var course = courseRepository.findByIdAndTeacherId(courseId, teacher.getId()).orElse(null);
-        if (course == null) return new ModelAndView(COURSES_REDIRECT);
-
-        var student = studentRepository.findById(studentId).orElse(null);
-        if (student == null)
+        TeacherWorkbenchService.TeacherStudentDetailView view;
+        try {
+            view = teacherWorkbenchService.getStudentDetailView(userDetails.getUsername(), courseId, studentId);
+        } catch (Exception _) {
             return new ModelAndView("redirect:/teacher/courses/" + courseId + "/students");
-
-        var grades = gradeRepository.findByCourseIdOrderByCreationDateDesc(courseId).stream()
-                .filter(g -> g.getStudent().getId().equals(studentId))
-                .map(g -> new GradeRow(g.getId().toString(), g.getGrade(), g.getCreationDate()))
-                .toList();
-
-        var attendances = attendanceRepository
-                .findByCourseIdAndTeacherIdOrderByAttendanceDateDesc(courseId, teacher.getId()).stream()
-                .filter(a -> a.getStudent().getId().equals(studentId))
-                .map(a -> new AttendanceRow(a.getId().toString(), a.getAttendanceDate(), a.isPresent()))
-                .toList();
+        }
 
         var mv = new ModelAndView("teacher-student-detail");
         mv.addObject("courseId", courseId.toString());
-        mv.addObject("courseName", course.getName());
+        mv.addObject("courseName", view.courseName());
         mv.addObject("studentId", studentId.toString());
-        mv.addObject("studentName",
-                student.getUser().getFirstName() + " " + student.getUser().getLastName());
-        mv.addObject("grades", grades);
-        mv.addObject("attendances", attendances);
+        mv.addObject("studentName", view.studentName());
+        mv.addObject("grades", view.grades());
+        mv.addObject("attendances", view.attendances());
         mv.addObject("success", success);
         mv.addObject("error", error);
         return mv;
@@ -162,18 +124,11 @@ public class TeacherCoursePageController {
                                     @PathVariable("studentId") UUID studentId,
                                     @PathVariable("gradeId") UUID gradeId,
                                     @AuthenticationPrincipal UserDetails userDetails) {
-        var teacher = teacherRepository.findByUserUsername(userDetails.getUsername()).orElse(null);
-        if (teacher == null)
-            return redirectToStudent(courseId, studentId, null, "Teacher profile not found");
-
-        var grade = gradeRepository.findByIdAndCourseIdAndCourseTeacherId(gradeId, courseId, teacher.getId())
-                .orElse(null);
-        if (grade == null || !grade.getStudent().getId().equals(studentId))
-            return redirectToStudent(courseId, studentId, null, "Grade not found");
-
         try {
-            gradeService.delete(gradeId);
+            teacherWorkbenchService.deleteGrade(userDetails.getUsername(), courseId, studentId, gradeId);
             return redirectToStudent(courseId, studentId, "Grade removed", null);
+        } catch (ValidationException ex) {
+            return redirectToStudent(courseId, studentId, null, ex.getMessage());
         } catch (Exception _) {
             return redirectToStudent(courseId, studentId, null, "Could not remove grade");
         }
@@ -185,16 +140,17 @@ public class TeacherCoursePageController {
                                       @Valid @ModelAttribute TeacherAttendanceForm form,
                                       BindingResult bindingResult,
                                       @AuthenticationPrincipal UserDetails userDetails) {
-        var teacher = teacherRepository.findByUserUsername(userDetails.getUsername()).orElse(null);
-        if (teacher == null) return new ModelAndView(COURSES_REDIRECT);
-
         if (bindingResult.hasErrors()) {
             return redirectToStudent(courseId, studentId, null, "Please provide a valid attendance date and status");
         }
         try {
-            teacherWorkbenchService.addAttendance(userDetails.getUsername(),
-                    new AttendanceRequest(form.attendanceDate(),
-                            Boolean.TRUE.equals(form.present()), studentId, teacher.getId(), courseId));
+            teacherWorkbenchService.addAttendance(
+                    userDetails.getUsername(),
+                    courseId,
+                    studentId,
+                    form.attendanceDate(),
+                    Boolean.TRUE.equals(form.present())
+            );
             return redirectToStudent(courseId, studentId, "Attendance added", null);
         } catch (ValidationException ex) {
             return redirectToStudent(courseId, studentId, null, ex.getMessage());
@@ -210,16 +166,18 @@ public class TeacherCoursePageController {
                                          @Valid @ModelAttribute TeacherAttendanceForm form,
                                          BindingResult bindingResult,
                                          @AuthenticationPrincipal UserDetails userDetails) {
-        var teacher = teacherRepository.findByUserUsername(userDetails.getUsername()).orElse(null);
-        if (teacher == null) return new ModelAndView(COURSES_REDIRECT);
-
         if (bindingResult.hasErrors()) {
             return redirectToStudent(courseId, studentId, null, "Please provide a valid attendance date and status");
         }
         try {
-            teacherWorkbenchService.updateAttendance(userDetails.getUsername(), attendanceId,
-                    new AttendanceRequest(form.attendanceDate(),
-                            Boolean.TRUE.equals(form.present()), studentId, teacher.getId(), courseId));
+            teacherWorkbenchService.updateAttendance(
+                    userDetails.getUsername(),
+                    attendanceId,
+                    courseId,
+                    studentId,
+                    form.attendanceDate(),
+                    Boolean.TRUE.equals(form.present())
+            );
             return redirectToStudent(courseId, studentId, "Attendance updated", null);
         } catch (ValidationException ex) {
             return redirectToStudent(courseId, studentId, null, ex.getMessage());
@@ -233,23 +191,15 @@ public class TeacherCoursePageController {
                                          @PathVariable("studentId") UUID studentId,
                                          @PathVariable("attendanceId") UUID attendanceId,
                                          @AuthenticationPrincipal UserDetails userDetails) {
-        var teacher = teacherRepository.findByUserUsername(userDetails.getUsername()).orElse(null);
-        if (teacher == null)
-            return redirectToStudent(courseId, studentId, null, "Teacher profile not found");
-
-        var attendance = attendanceRepository
-                .findByIdAndCourseIdAndTeacherId(attendanceId, courseId, teacher.getId()).orElse(null);
-        if (attendance == null || !attendance.getStudent().getId().equals(studentId))
-            return redirectToStudent(courseId, studentId, null, "Attendance record not found");
-
         try {
-            attendanceService.delete(attendanceId);
+            teacherWorkbenchService.deleteAttendance(userDetails.getUsername(), courseId, studentId, attendanceId);
             return redirectToStudent(courseId, studentId, "Attendance removed", null);
+        } catch (ValidationException ex) {
+            return redirectToStudent(courseId, studentId, null, ex.getMessage());
         } catch (Exception _) {
             return redirectToStudent(courseId, studentId, null, "Could not remove attendance");
         }
     }
-
 
     private ModelAndView redirectToStudent(UUID courseId, UUID studentId, String success, String error) {
         String base = "/teacher/courses/" + courseId + "/students/" + studentId;
@@ -259,14 +209,5 @@ public class TeacherCoursePageController {
 
     private String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
-    }
-
-    public record StudentListRow(String studentId, String fullName, String email) {
-    }
-
-    public record GradeRow(String id, Double value, java.time.LocalDate date) {
-    }
-
-    public record AttendanceRow(String id, java.time.LocalDate date, boolean present) {
     }
 }
