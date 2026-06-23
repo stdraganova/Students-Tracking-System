@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Students</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1 th:text="${courseName} + ' — Students'">Course Students</h1>
+        <div class="actions">
+            <a class="btn secondary" th:href="@{/courses}">← My Courses</a>
+        </div>
+
+        <div th:if="${success}" class="message success" th:text="${success}"></div>
+        <div th:if="${error}"   class="message error"   th:text="${error}"></div>
+
+        <table th:if="${not #lists.isEmpty(students)}">
+            <thead>
+            <tr>
+                <th>Student</th>
+                <th>Email</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="student : ${students}">
+                <td>
+                    <a th:href="@{/teacher/courses/{cId}/students/{sId}(cId=${courseId},sId=${student.studentId()})}"
+                       th:text="${student.fullName()}">Student</a>
+                </td>
+                <td th:text="${student.email()}"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div th:if="${#lists.isEmpty(students)}" class="message">
+            No students enrolled in this course yet.
+        </div>
+    </div>
+</div>
+</body>
+</html>

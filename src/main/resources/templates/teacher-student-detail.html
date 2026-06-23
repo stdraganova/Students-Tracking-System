@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Detail</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <style>
+        /* ── Section header with + button ─────────────── */
+        .section-heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 24px 0 8px;
+        }
+        .section-heading h2 { margin: 0; }
+
+        /* ── Div-based table so each row can be a <form> ─ */
+        .dtable { width: 100%; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+        .drow {
+            display: grid;
+            border-bottom: 1px solid #e3edf8;
+        }
+        .drow:last-child { border-bottom: none; }
+        .drow.header { background: linear-gradient(180deg,#e8f4ff 0%,#d8eeff 100%); font-weight: 700; color: #0e3569; }
+        .drow.grades-row   { grid-template-columns: 1fr 1fr 90px; }
+        .drow.attend-row   { grid-template-columns: 1fr 120px 90px; }
+        .dcell {
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+        }
+        .dcell.center { justify-content: center; }
+
+        /* ── Inline-edit inputs ────────────────────────── */
+        .cell-input {
+            width: 100%;
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 4px 6px;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: var(--text-main);
+            cursor: pointer;
+            font-family: inherit;
+            margin: 0;
+        }
+        .cell-input:hover  { border-color: #bfd6ef; background: #f7fbff; }
+        .cell-input:focus  {
+            border-color: var(--primary);
+            background: #fff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(31,111,235,.18);
+            cursor: text;
+        }
+
+        /* ── Row action buttons ────────────────────────── */
+        .action-cell { display: flex; gap: 5px; justify-content: center; }
+        .btn-save {
+            display: none;
+            width: 28px; height: 28px;
+            border-radius: 50%; border: none;
+            background: #22c55e; color: #fff;
+            font-size: .85rem; font-weight: 700;
+            cursor: pointer; flex-shrink: 0;
+        }
+        .btn-del {
+            width: 28px; height: 28px;
+            border-radius: 50%; border: none;
+            background: #ef4444; color: #fff;
+            font-size: .85rem; font-weight: 700;
+            cursor: pointer; flex-shrink: 0;
+        }
+        .btn-del:hover  { background: #b91c1c; }
+        .btn-save:hover { background: #16a34a; }
+
+        /* ── "Add" row (hidden by default) ────────────── */
+        .add-row { display: none; background: #f0f9ff; }
+        .add-row .cell-input {
+            border-color: #bfd6ef; background: #fff;
+        }
+        .btn-add {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 50%; border: none;
+            background: var(--primary); color: #fff;
+            font-size: 1.4rem; font-weight: 700; cursor: pointer;
+            flex-shrink: 0;
+        }
+        .btn-add:hover { background: var(--primary-hover); }
+        .btn-cancel {
+            width: 28px; height: 28px; border-radius: 50%; border: none;
+            background: #6b7280; color: #fff; font-size: .85rem; font-weight: 700;
+            cursor: pointer; flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1 th:text="${studentName}">Student</h1>
+        <p style="margin:0 0 4px; color:var(--text-muted);" th:text="${courseName}"></p>
+        <div class="actions">
+            <a class="btn secondary"
+               th:href="@{/teacher/courses/{cId}/students(cId=${courseId})}">← All Students</a>
+        </div>
+
+        <div th:if="${success}" class="message success" th:text="${success}"></div>
+        <div th:if="${error}"   class="message error"   th:text="${error}"></div>
+
+        <div class="section-heading">
+            <h2>Grades</h2>
+            <button type="button" class="btn-add" title="Add grade" onclick="showAddGrade()">+</button>
+        </div>
+
+        <div class="dtable">
+            <div class="drow grades-row header">
+                <div class="dcell">Date</div>
+                <div class="dcell">Grade (2–6)</div>
+                <div class="dcell center">Actions</div>
+            </div>
+
+            <th:block th:each="grade : ${grades}">
+                <form class="drow grades-row"
+                      th:action="@{/teacher/courses/{cId}/students/{sId}/grades/{gId}/update(cId=${courseId},sId=${studentId},gId=${grade.id()})}"
+                      method="post">
+                    <div class="dcell">
+                        <input class="cell-input" type="date" name="creationDate"
+                               th:value="${grade.date()}" lang="en" required>
+                    </div>
+                    <div class="dcell">
+                        <input class="cell-input" type="number" name="grade"
+                               th:value="${grade.value()}" min="2" max="6" step="0.1" required>
+                    </div>
+                    <div class="dcell action-cell">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="btn-save" title="Save">✓</button>
+                        <button type="submit" class="btn-del" title="Delete"
+                                th:formaction="@{/teacher/courses/{cId}/students/{sId}/grades/{gId}/delete(cId=${courseId},sId=${studentId},gId=${grade.id()})}"
+                                onclick="return confirm('Delete this grade?')">✕</button>
+                    </div>
+                </form>
+            </th:block>
+
+            <form id="addGradeForm" class="drow grades-row add-row"
+                  th:action="@{/teacher/courses/{cId}/students/{sId}/grades(cId=${courseId},sId=${studentId})}"
+                  method="post">
+                <div class="dcell">
+                    <input class="cell-input" type="date" name="creationDate" lang="en" required>
+                </div>
+                <div class="dcell">
+                    <input class="cell-input" type="number" name="grade"
+                           min="2" max="6" step="0.1" placeholder="e.g. 5.0" required>
+                </div>
+                <div class="dcell action-cell">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn-save" style="display:flex;" title="Save">✓</button>
+                    <button type="button" class="btn-cancel" title="Cancel" onclick="hideAddGrade()">✕</button>
+                </div>
+            </form>
+
+            <div th:if="${#lists.isEmpty(grades)}" class="drow grades-row"
+                 style="display: none;" id="gradesEmptyHint">
+            </div>
+            <div th:if="${#lists.isEmpty(grades)}"
+                 style="padding:12px 14px; color:var(--text-muted); font-size:.95rem;">
+                No grades yet — click <strong>+</strong> to add one.
+            </div>
+        </div>
+
+        <div class="section-heading">
+            <h2>Attendance</h2>
+            <button type="button" class="btn-add" title="Add attendance" onclick="showAddAttendance()">+</button>
+        </div>
+
+        <div class="dtable">
+            <div class="drow attend-row header">
+                <div class="dcell">Date</div>
+                <div class="dcell">Status</div>
+                <div class="dcell center">Actions</div>
+            </div>
+
+            <th:block th:each="attendance : ${attendances}">
+                <form class="drow attend-row"
+                      th:action="@{/teacher/courses/{cId}/students/{sId}/attendance/{aId}/update(cId=${courseId},sId=${studentId},aId=${attendance.id()})}"
+                      method="post">
+                    <div class="dcell">
+                        <input class="cell-input" type="date" name="attendanceDate"
+                               th:value="${attendance.date()}" lang="en" required>
+                    </div>
+                    <div class="dcell">
+                        <select class="cell-input" name="present" required>
+                            <option value="true"  th:selected="${attendance.present()}">Present</option>
+                            <option value="false" th:selected="${!attendance.present()}">Absent</option>
+                        </select>
+                    </div>
+                    <div class="dcell action-cell">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="btn-save" title="Save">✓</button>
+                        <button type="submit" class="btn-del" title="Delete"
+                                th:formaction="@{/teacher/courses/{cId}/students/{sId}/attendance/{aId}/delete(cId=${courseId},sId=${studentId},aId=${attendance.id()})}"
+                                onclick="return confirm('Delete this attendance record?')">✕</button>
+                    </div>
+                </form>
+            </th:block>
+
+            <form id="addAttendanceForm" class="drow attend-row add-row"
+                  th:action="@{/teacher/courses/{cId}/students/{sId}/attendance(cId=${courseId},sId=${studentId})}"
+                  method="post">
+                <div class="dcell">
+                    <input class="cell-input" type="date" name="attendanceDate" lang="en" required>
+                </div>
+                <div class="dcell">
+                    <select class="cell-input" name="present" required>
+                        <option value="true">Present</option>
+                        <option value="false">Absent</option>
+                    </select>
+                </div>
+                <div class="dcell action-cell">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn-save" style="display:flex;" title="Save">✓</button>
+                    <button type="button" class="btn-cancel" title="Cancel" onclick="hideAddAttendance()">✕</button>
+                </div>
+            </form>
+
+            <div th:if="${#lists.isEmpty(attendances)}"
+                 style="padding:12px 14px; color:var(--text-muted); font-size:.95rem;">
+                No attendance records yet — click <strong>+</strong> to add one.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── Show/hide add-grade row ───────────────────────
+    function showAddGrade() {
+        var form = document.getElementById('addGradeForm');
+        form.style.display = 'grid';
+        form.querySelector('input[type=date]').focus();
+    }
+    function hideAddGrade() {
+        document.getElementById('addGradeForm').style.display = 'none';
+    }
+
+    // ── Show/hide add-attendance row ─────────────────
+    function showAddAttendance() {
+        var form = document.getElementById('addAttendanceForm');
+        form.style.display = 'grid';
+        form.querySelector('input[type=date]').focus();
+    }
+    function hideAddAttendance() {
+        document.getElementById('addAttendanceForm').style.display = 'none';
+    }
+
+    // ── Show ✓ Save button when a row input is focused ──
+    document.querySelectorAll('.dtable .drow:not(.header):not(.add-row)').forEach(function(row) {
+        var saveBtn = row.querySelector('.btn-save');
+        if (!saveBtn) return;
+        row.querySelectorAll('.cell-input').forEach(function(input) {
+            input.addEventListener('focus', function() {
+                saveBtn.style.display = 'flex';
+            });
+            input.addEventListener('blur', function() {
+                // small delay so clicking Save still fires
+                setTimeout(function() {
+                    if (!row.contains(document.activeElement)) {
+                        saveBtn.style.display = 'none';
+                    }
+                }, 200);
+            });
+        });
+    });
+</script>
+</body>
+</html>
+

@@ -108,6 +108,20 @@ public class StudentService {
         log.info("Course {} added to student {}", courseId, studentId);
     }
 
+    public void addCourseForUsername(UUID courseId, String username) {
+        Objects.requireNonNull(courseId, "Course ID cannot be null");
+        Objects.requireNonNull(username, "Username cannot be null");
+
+        var user = userRepository.findByUsername(username)
+                .orElseThrow(() -> ResourceNotFoundException.of("User", username));
+
+        if (user.getStudent() == null) {
+            throw new ValidationException("Student profile not found");
+        }
+
+        addCourse(courseId, user.getStudent().getId());
+    }
+
     public void removeCourse(UUID courseId, UUID studentId) {
         Objects.requireNonNull(courseId, "Course ID cannot be null");
         Objects.requireNonNull(studentId, STUDENT_ID_NULL_MSG);

@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -38,6 +39,11 @@ public class TeacherService {
         var savedTeacher = teacherRepository.save(teacher);
         log.info("Teacher saved successfully: {}", savedTeacher.getId());
         return mapper.toResponse(savedTeacher);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Teacher> getAll() {
+        return teacherRepository.findAll();
     }
 
     public void delete(UUID teacherId) {

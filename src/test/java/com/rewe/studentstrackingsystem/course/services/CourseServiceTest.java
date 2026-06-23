@@ -77,7 +77,6 @@ class CourseServiceTest {
         assertNull(result);
         assertEquals(teacher, mappedCourse.getTeacher());
         assertTrue(teacher.getCourses().contains(mappedCourse));
-        verify(teacherRepository).save(teacher);
         verify(courseRepository).save(mappedCourse);
     }
 

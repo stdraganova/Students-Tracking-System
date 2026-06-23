@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>Courses</h1>
+        <div class="actions">
+            <a class="btn secondary" th:href="@{/home}">Back to Home</a>
+            <a class="btn" th:href="@{/profile}">Profile</a>
+        </div>
+
+        <div th:if="${enrolled}" class="message success">Successfully enrolled in the course!</div>
+        <div th:if="${enrollError}" class="message error" th:text="${enrollErrorMsg != null ? enrollErrorMsg : 'Could not enroll in course.'}">Could not enroll in course.</div>
+
+        <div th:if="${isStudent}">
+            <h2 style="margin-top: 16px;">My Enrolled Courses</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Teacher</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="course : ${dashboard.studentCourses}">
+                    <td th:text="${course.courseName}"></td>
+                    <td th:text="${course.teacherName}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(dashboard.studentCourses)}">
+                    <td colspan="2">You are not enrolled in any courses yet.</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <h2 style="margin-top: 24px;">Available Courses</h2>
+            <table th:if="${not #lists.isEmpty(availableCourses)}">
+                <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Teacher</th>
+                    <th style="text-align: center; width: 110px;">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="course : ${availableCourses}">
+                    <td th:text="${course.name()}"></td>
+                    <td th:text="${course.teacherName()}"></td>
+                    <td style="text-align: center;">
+                        <form th:action="@{/courses/{id}/enroll(id=${course.id()})}" method="post" style="margin:0;">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="btn" style="margin:0; padding: 6px 14px; font-size: 0.9rem;">+ Enroll</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${#lists.isEmpty(availableCourses)}" class="message" style="margin-top:8px;">
+                No additional courses available to enroll in.
+            </div>
+        </div>
+
+        <table th:if="${isTeacher}">
+            <thead>
+            <tr>
+                <th>Course</th>
+                <th>Enrolled Students</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="course : ${dashboard.teacherCourses}">
+                <td>
+                    <a th:href="@{/teacher/courses/{id}/students(id=${course.id})}" th:text="${course.courseName}"></a>
+                </td>
+                <td th:text="${course.enrolledStudents}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(dashboard.teacherCourses)}">
+                <td colspan="2">No teaching courses available.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div th:if="${!isStudent and !isTeacher}" class="message">No courses available for your role.</div>
+    </div>
+</div>
+</body>
+</html>
