@@ -45,7 +45,7 @@ public class AdminInitializerConfig {
                     .build();
 
             userRepository.save(admin);
-            log.info("Default admin user created: username=admin, bootstrap secret={}", adminPassword);
+            log.info("Default admin user created: username=admin");
         };
     }
 }
