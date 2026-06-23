@@ -58,12 +58,6 @@ public class CourseService {
                 .orElseThrow(() -> ResourceNotFoundException.of("Course", courseId.toString()));
     }
 
-    @Transactional(readOnly = true)
-    public List<Course> getCoursesByTeacher(UUID teacherId) {
-        Objects.requireNonNull(teacherId, "Teacher ID cannot be null");
-        return courseRepository.findByTeacherId(teacherId);
-    }
-
     public CourseResponse update(UUID courseId, CourseRequest request) {
         Objects.requireNonNull(courseId, "Course ID cannot be null");
         Objects.requireNonNull(request, "CourseRequest cannot be null");
