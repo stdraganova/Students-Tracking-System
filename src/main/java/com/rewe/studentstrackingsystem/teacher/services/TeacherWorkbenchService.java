@@ -15,8 +15,6 @@ import com.rewe.studentstrackingsystem.grade.repository.GradeRepository;
 import com.rewe.studentstrackingsystem.grade.services.GradeService;
 import com.rewe.studentstrackingsystem.student.dto.StudentListRow;
 import com.rewe.studentstrackingsystem.student.repository.StudentRepository;
-import com.rewe.studentstrackingsystem.teacher.dtos.TeacherCourseOptionResponse;
-import com.rewe.studentstrackingsystem.teacher.dtos.TeacherStudentOptionResponse;
 import com.rewe.studentstrackingsystem.teacher.entity.Teacher;
 import com.rewe.studentstrackingsystem.teacher.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,33 +39,6 @@ public class TeacherWorkbenchService {
     private final AttendanceRepository attendanceRepository;
     private final AttendanceService attendanceService;
     private final GradeService gradeService;
-
-    @Transactional(readOnly = true)
-    public List<TeacherCourseOptionResponse> getCourses(String teacherUsername) {
-        var teacher = getTeacherByUsername(teacherUsername);
-
-        return courseService.getCoursesByTeacher(teacher.getId()).stream()
-                .map(course -> new TeacherCourseOptionResponse(course.getId(), course.getName()))
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<TeacherStudentOptionResponse> getStudentsByCourse(String teacherUsername, UUID courseId) {
-        var teacher = getTeacherByUsername(teacherUsername);
-
-        var course = courseService.getCourseById(courseId);
-        if (!course.getTeacher().getId().equals(teacher.getId())) {
-            throw new ValidationException("You can only access students from your own courses");
-        }
-
-        return studentRepository.findDistinctByCoursesId(courseId).stream()
-                .map(student -> new TeacherStudentOptionResponse(
-                        student.getId(),
-                        student.getUser().getFirstName(),
-                        student.getUser().getLastName(),
-                        student.getUser().getEmail()))
-                .toList();
-    }
 
     @Transactional(readOnly = true)
     public TeacherCourseStudentsView getCourseStudentsView(String teacherUsername, UUID courseId) {
@@ -116,17 +87,6 @@ public class TeacherWorkbenchService {
         return new TeacherStudentDetailView(course.getName(), studentName, grades, attendances);
     }
 
-    public AttendanceResponse addAttendance(String teacherUsername, AttendanceRequest request) {
-        Objects.requireNonNull(request, "AttendanceRequest cannot be null");
-        return addAttendance(
-                teacherUsername,
-                request.courseId(),
-                request.studentId(),
-                request.attendanceDate(),
-                request.isPresent()
-        );
-    }
-
     public AttendanceResponse addAttendance(String teacherUsername,
                                            UUID courseId,
                                            UUID studentId,
@@ -154,18 +114,6 @@ public class TeacherWorkbenchService {
         ensureTeacherOwnsCourseAndStudentIsEnrolled(teacher.getId(), request.course(), request.student());
 
         return gradeService.createResponse(request);
-    }
-
-    public AttendanceResponse updateAttendance(String teacherUsername, UUID attendanceId, AttendanceRequest request) {
-        Objects.requireNonNull(request, "AttendanceRequest cannot be null");
-        return updateAttendance(
-                teacherUsername,
-                attendanceId,
-                request.courseId(),
-                request.studentId(),
-                request.attendanceDate(),
-                request.isPresent()
-        );
     }
 
     public AttendanceResponse updateAttendance(String teacherUsername,

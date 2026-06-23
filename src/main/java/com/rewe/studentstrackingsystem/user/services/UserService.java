@@ -96,15 +96,6 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    @Transactional(readOnly = true)
-    public UserResponse getByUsernameOrEmail(String usernameOrEmail) {
-        Objects.requireNonNull(usernameOrEmail, "Username or email cannot be null");
-
-        var user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
-                .orElseThrow(() -> ResourceNotFoundException.of("User", usernameOrEmail));
-        return mapper.toResponse(user);
-    }
-
     public UserResponse updateSelf(String usernameOrEmail, UserUpdateRequest request) {
         Objects.requireNonNull(usernameOrEmail, "Username or email cannot be null");
         Objects.requireNonNull(request, "UserUpdateRequest cannot be null");
@@ -113,17 +104,6 @@ public class UserService {
                 .orElseThrow(() -> ResourceNotFoundException.of("User", usernameOrEmail));
 
         applyEditableFields(user, request, false);
-        return mapper.toResponse(userRepository.save(user));
-    }
-
-    public UserResponse updateById(UUID id, UserUpdateRequest request) {
-        Objects.requireNonNull(id, "User ID cannot be null");
-        Objects.requireNonNull(request, "UserUpdateRequest cannot be null");
-
-        var user = userRepository.findById(id)
-                .orElseThrow(() -> ResourceNotFoundException.of("User", id.toString()));
-
-        applyEditableFields(user, request, true);
         return mapper.toResponse(userRepository.save(user));
     }
 
